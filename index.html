@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Miu SN 2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; padding: 0; background: #f5f7fb; color: #333; }
+    header {
+      text-align: center; padding: 30px 20px 10px;
+      background: linear-gradient(135deg, #4facfe, #00f2fe); color: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    header h1 { margin: 0; font-size: 28px; }
+    header p { margin: 5px 0 0; font-size: 15px; opacity: 0.9; }
+
+    .container { max-width: 1300px; margin: auto; padding: 20px; }
+
+    .bucket-box { text-align: center; margin-bottom: 20px; }
+    .bucket-box label { font-weight: bold; display: block; margin-bottom: 10px; }
+    .bucket-list {
+      display: flex; flex-wrap: nowrap; gap: 10px; overflow-x: auto;
+      padding: 10px; justify-content: center; scrollbar-width: thin;
+    }
+    .bucket-list::-webkit-scrollbar { height: 6px; }
+    .bucket-list::-webkit-scrollbar-thumb { background: #bbb; border-radius: 4px; }
+    .bucket {
+      padding: 10px 18px; border: none; border-radius: 25px; background: #e9ecef;
+      cursor: pointer; font-weight: bold; transition: all 0.3s; white-space: nowrap;
+    }
+    .bucket:hover { background: #dee2e6; }
+    .bucket.active {
+      background: linear-gradient(135deg, #4facfe, #0066cc);
+      color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+
+    .reload-btn {
+      display: block; margin: 15px auto; padding: 12px 24px;
+      border: none; border-radius: 8px; background: #28a745; color: #fff;
+      font-weight: bold; cursor: pointer; transition: 0.3s;
+    }
+    .reload-btn:hover { background: #1e7e34; }
+
+    .upload-box {
+      text-align: center; margin-bottom: 20px;
+      background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Thanh tiến trình */
+    .progress-container { width: 80%; max-width: 400px; margin: 10px auto; background: #ddd; border-radius: 8px; overflow: hidden; display: none; }
+    .progress-bar { width: 0%; height: 14px; background: linear-gradient(135deg, #00b09b, #96c93d); transition: width 0.3s ease; }
+
+    /* Thanh tìm kiếm */
+    .search-box {
+      text-align: center; margin-bottom: 20px;
+    }
+    .search-box input {
+      padding: 10px; border-radius: 8px; border: 1px solid #ccc; width: 220px; font-size: 15px;
+    }
+
+    .tabs { display: flex; justify-content: center; margin: 20px 0; gap: 10px; }
+    .tab {
+      padding: 12px 24px; border: none; border-radius: 25px;
+      background: #e0e0e0; cursor: pointer; font-weight: bold; transition: 0.3s;
+    }
+    .tab:hover { background: #d0d0d0; }
+    .tab.active { background: #0066cc; color: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+
+    .card { background: #fff; padding: 20px; border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;
+    }
+    .item { background: #fafafa; border-radius: 12px; padding: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s; cursor: pointer; }
+    .item:hover { transform: translateY(-5px); }
+    img, video { max-width: 100%; height: auto; object-fit: contain; border-radius: 10px; margin-bottom: 8px; }
+    video { background: #000; }
+    .info { font-size: 13px; color: #555; text-align: center; }
+    .hidden { display: none; }
+
+    .lightbox {
+      display: none; position: fixed; z-index: 9999; top: 0; left: 0;
+      width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+      justify-content: center; align-items: center; flex-direction: column;
+    }
+    .lightbox video, .lightbox img {
+      max-width: 100%; max-height: 80vh; border-radius: 10px;
+    }
+    .controls { margin-top: 15px; text-align: center; }
+    .btn {
+      background: rgba(255,255,255,0.2); color: #fff; border: none;
+      padding: 10px 18px; margin: 5px; border-radius: 6px;
+      cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s;
+    }
+    .btn:hover { background: rgba(255,255,255,0.4); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📂 Thư viện Ảnh & Video</h1>
+    <p>Xem trực tiếp ảnh và video Miu SN 2025</p>
+  </header>
+
+  <div class="container">
+
+    <div class="bucket-box">
+      <label>Chọn bucket:</label>
+      <div class="bucket-list" id="bucketList">
+        <button class="bucket active" onclick="setBucket('day18', this)">📂 day18</button>
+        <button class="bucket" onclick="setBucket('miu2024', this)">📂 miu2024</button>
+        <button class="bucket" onclick="setBucket('miu2025', this)">📂 miu2025</button>
+        <button class="bucket" onclick="setBucket('miu2026', this)">📂 miu2026</button>
+        <button class="bucket" onclick="setBucket('miu99207', this)">📂 miu99207</button>
+        <button class="bucket" onclick="setBucket('miutet2025', this)">📂 miutet2025</button>
+        <button class="bucket" onclick="setBucket('miuxinghui', this)">📂 miuxinghui</button>
+        <button class="bucket" onclick="setBucket('mybucket', this)">📂 mybucket</button>
+        <button class="bucket" onclick="setBucket('xinghui', this)">📂 xinghui</button>
+      </div>
+    </div>
+
+    <div class="upload-box">
+      <input type="file" id="fileInput" multiple>
+      <button class="reload-btn" onclick="uploadFiles()">⬆ Upload</button>
+      <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+
+    <!-- 🔍 Thanh tìm kiếm -->
+    <div class="search-box">
+      <input type="date" id="dateFilter" onchange="filterByDate()">
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('image')">🖼 Ảnh</button>
+      <button class="tab" onclick="showTab('video')">🎬 Video</button>
+    </div>
+
+    <button class="reload-btn" onclick="listFiles()">🔄 Tải lại danh sách</button>
+
+    <div id="imageSection" class="card"><div class="grid" id="imageList"></div></div>
+    <div id="videoSection" class="card hidden"><div class="grid" id="videoList"></div></div>
+  </div>
+
+  <div id="lightbox" class="lightbox">
+    <div class="lightbox-content" id="lightboxContent"></div>
+    <div class="controls">
+      <button class="btn" onclick="prevItem()">⬅ Trước</button>
+      <button class="btn" onclick="closeLightbox()">✖ Đóng</button>
+      <button class="btn" onclick="nextItem()">➡ Sau</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.1420.0/aws-sdk.min.js"></script>
+  <script>
+    const accessKey = "N12TIFK5L059IK15QPO9";
+    const secretKey = "xqFsKI7fBDrlX6bL2mkDmrAuzTUMrneJbcOUbrTe";
+    let bucket = "day18";
+    const endpoint = "s3.cloudfly.vn";
+
+    AWS.config.update({
+      accessKeyId: accessKey,
+      secretAccessKey: secretKey,
+      region: "ap-southeast-1",
+      s3ForcePathStyle: true,
+    });
+
+    const s3 = new AWS.S3({ endpoint: new AWS.Endpoint(endpoint) });
+
+    let imageItems = [];
+    let videoItems = [];
+    let allFiles = [];
+    let currentList = [];
+    let currentIndex = 0;
+
+    function setBucket(b, btn) {
+      bucket = b;
+      document.querySelectorAll(".bucket").forEach(el => el.classList.remove("active"));
+      btn.classList.add("active");
+      listFiles();
+    }
+
+    // ✅ Upload có tiến trình
+    function uploadFiles() {
+      const files = document.getElementById("fileInput").files;
+      const progressContainer = document.querySelector(".progress-container");
+      const progressBar = document.getElementById("progressBar");
+
+      if (!files.length) { alert("Chọn ít nhất 1 file!"); return; }
+
+      let uploaded = 0;
+      progressContainer.style.display = "block";
+      progressBar.style.width = "0%";
+
+      [...files].forEach(file => {
+        const params = { Bucket: bucket, Key: file.name, Body: file, ACL: "public-read" };
+        const upload = s3.upload(params);
+
+        upload.on("httpUploadProgress", (evt) => {
+          const percent = Math.round((evt.loaded / evt.total) * 100);
+          progressBar.style.width = percent + "%";
+        });
+
+        upload.send((err) => {
+          if (err) alert("❌ Upload lỗi: " + err.message);
+          uploaded++;
+          if (uploaded === files.length) {
+            progressBar.style.width = "100%";
+            setTimeout(() => progressContainer.style.display = "none", 800);
+            listFiles();
+          }
+        });
+      });
+    }
+
+    // ✅ Lọc file theo ngày
+    function filterByDate() {
+      const date = document.getElementById("dateFilter").value;
+      if (!date) { renderLists(allFiles); return; }
+      const selectedDate = new Date(date);
+      const filtered = allFiles.filter(obj => {
+        const fileDate = new Date(obj.LastModified);
+        return fileDate.toDateString() === selectedDate.toDateString();
+      });
+      renderLists(filtered);
+    }
+
+    function listFiles() {
+      const imageList = document.getElementById("imageList");
+      const videoList = document.getElementById("videoList");
+      imageList.innerHTML = "<p>⏳ Đang tải ảnh...</p>";
+      videoList.innerHTML = "<p>⏳ Đang tải video...</p>";
+
+      s3.listObjectsV2({ Bucket: bucket }, (err, data) => {
+        if (err) {
+          imageList.innerHTML = `<span style="color:red">❌ Lỗi: ${err}</span>`;
+          return;
+        }
+        allFiles = data.Contents || [];
+        renderLists(allFiles);
+      });
+    }
+
+    function renderLists(files) {
+      const imageList = document.getElementById("imageList");
+      const videoList = document.getElementById("videoList");
+      imageList.innerHTML = "";
+      videoList.innerHTML = "";
+      imageItems = [];
+      videoItems = [];
+
+      if (!files.length) {
+        imageList.innerHTML = "📭 Chưa có file nào.";
+        return;
+      }
+
+      files.forEach(obj => {
+        const url = `https://${bucket}.${endpoint}/${obj.Key}`;
+        const date = new Date(obj.LastModified).toLocaleString("vi-VN");
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "item";
+
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(obj.Key)) {
+          itemDiv.innerHTML = `<img src="${url}" alt="${obj.Key}"><div class="info">📅 ${date}</div>`;
+          const idx = imageItems.length;
+          itemDiv.onclick = () => openLightbox(idx, "image");
+          imageList.appendChild(itemDiv);
+          imageItems.push({ type: "image", url });
+        } else if (/\.(mp4|webm|ogg)$/i.test(obj.Key)) {
+          itemDiv.innerHTML = `<video src="${url}"></video><div class="info">📅 ${date}</div>`;
+          const idx = videoItems.length;
+          itemDiv.onclick = () => openLightbox(idx, "video");
+          videoList.appendChild(itemDiv);
+          videoItems.push({ type: "video", url });
+        }
+      });
+    }
+
+    function showTab(tab) {
+      const imgSection = document.getElementById("imageSection");
+      const vidSection = document.getElementById("videoSection");
+      const tabs = document.querySelectorAll(".tab");
+
+      if (tab === "image") { imgSection.classList.remove("hidden"); vidSection.classList.add("hidden"); }
+      else { vidSection.classList.remove("hidden"); imgSection.classList.add("hidden"); }
+
+      tabs.forEach(t => t.classList.remove("active"));
+      document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add("active");
+    }
+
+    function openLightbox(index, type) {
+      currentIndex = index;
+      currentList = type === "image" ? imageItems : videoItems;
+      const lightbox = document.getElementById("lightbox");
+      const content = document.getElementById("lightboxContent");
+      const item = currentList[index];
+      content.innerHTML = item.type === "image"
+        ? `<img src="${item.url}">`
+        : `<video src="${item.url}" controls autoplay></video>`;
+      lightbox.style.display = "flex";
+    }
+
+    function closeLightbox() { document.getElementById("lightbox").style.display = "none"; }
+    function nextItem() { if (!currentList.length) return; currentIndex = (currentIndex + 1) % currentList.length; openLightbox(currentIndex, currentList[0].type); }
+    function prevItem() { if (!currentList.length) return; currentIndex = (currentIndex - 1 + currentList.length) % currentList.length; openLightbox(currentIndex, currentList[0].type); }
+
+    document.addEventListener("keydown", e => {
+      if (document.getElementById("lightbox").style.display === "flex") {
+        if (e.key === "ArrowRight") nextItem();
+        if (e.key === "ArrowLeft") prevItem();
+        if (e.key === "Escape") closeLightbox();
+      }
+    });
+
+    window.onload = listFiles;
+  </script>
+</body>
+</html>
