@@ -95,6 +95,17 @@
     .upload-btn:hover { background: #218838; transform: scale(1.05); }
     .upload-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
 
+    /* --- Read Only Message --- */
+    #readOnlyMessage {
+        display: none; /* Mặc định ẩn */
+        text-align: center; 
+        padding: 20px; 
+        background: rgba(255,255,255,0.6); 
+        border-radius: 15px; 
+        margin-bottom: 30px;
+        border: 1px solid #eee;
+    }
+
     /* --- Tools: Search & Tabs --- */
     .tools {
       display: flex; flex-wrap: wrap; justify-content: space-between;
@@ -171,25 +182,58 @@
     .btn-circle:hover { background: var(--primary-color); }
     
     .loader { text-align: center; padding: 20px; color: #888; font-size: 14px; display: none; }
+
+    /* --- NEW: Global Loading Overlay --- */
+    .loading-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        z-index: 9999;
+        display: none; /* Hidden by default */
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        backdrop-filter: blur(5px);
+    }
+    .spinner {
+        width: 50px; height: 50px;
+        border: 5px solid #ffeef1;
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-text {
+        color: var(--primary-color);
+        font-weight: bold;
+        font-family: 'Pacifico', cursive;
+        font-size: 18px;
+    }
   </style>
 </head>
 <body>
 
+  <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Đang tải dữ liệu...</div>
+  </div>
+
   <header>
-    <h1>☁️ Upload Miu Gallery</h1>
+    <h1>☁️ Miu Gallery Manager</h1>
   </header>
 
   <div class="container">
     
     <div class="bucket-section">
-      <span class="bucket-label">Đang chọn Bucket: <strong id="currentBucketLabel" style="color: var(--primary-color)">day18</strong></span>
+      <span class="bucket-label">Đang quản lý Bucket: <strong id="currentBucketLabel" style="color: var(--primary-color)">miu2026</strong></span>
       <div class="bucket-list" id="bucketList">
         </div>
     </div>
 
-    <div class="upload-card">
+    <div class="upload-card" id="uploadCard">
       <h3>📤 Tải lên ảnh & video mới</h3>
-      <p style="font-size: 13px; color: #777; margin-bottom: 20px;">Chọn file và nhấn Upload để lưu vào thư viện</p>
+      <p style="font-size: 13px; color: #777; margin-bottom: 20px;">Chọn file và nhấn Upload để lưu vào bucket hiện tại</p>
       
       <div class="file-input-wrapper">
         <label for="fileInput" class="custom-file-upload">
@@ -204,8 +248,13 @@
       </button>
     </div>
 
+    <div id="readOnlyMessage">
+        <i class="fas fa-lock" style="color: #999; font-size: 24px;"></i>
+        <p style="color: #666; margin-top: 10px;">Bucket này đã được lưu trữ (Chỉ xem).<br>Vui lòng chọn <strong>miu2026</strong> để tải lên.</p>
+    </div>
+
     <div class="tools">
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm theo ngày (vd: 2025-01-01)...">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm theo ngày (vd: 2026-01-15)...">
       
       <div class="tabs">
         <button class="tab active" onclick="switchTab('image')">Ảnh</button>
@@ -252,9 +301,15 @@
     const accessKey = "N12TIFK5L059IK15QPO9";
     const secretKey = "xqFsKI7fBDrlX6bL2mkDmrAuzTUMrneJbcOUbrTe";
     const endpoint = "s3.cloudfly.vn";
-    const buckets = ['day18', 'miu2024', 'miu2025', 'miu2026', 'miutet2025', 'miuxinghui', 'xinghui', 'miu99207', 'mybucket'];
     
-    let currentBucket = 'day18';
+    // --- DANH SÁCH BUCKETS (2026 ĐẦU TIÊN) ---
+    const buckets = ['miu2026', 'day18', 'miu2025', 'miu2024', 'miutet2025', 'miuxinghui', 'xinghui', 'miu99207', 'mybucket'];
+    
+    // --- DANH SÁCH BỊ KHÓA UPLOAD (READ-ONLY) ---
+    const readOnlyBuckets = ['miu2024', 'miu2025', 'day18', 'miutet2025'];
+    
+    // --- MẶC ĐỊNH ---
+    let currentBucket = 'miu2026';
 
     AWS.config.update({
       accessKeyId: accessKey, secretAccessKey: secretKey,
@@ -269,7 +324,7 @@
     // --- KHỞI TẠO ---
     window.onload = () => {
       renderBucketButtons();
-      loadBucket(currentBucket);
+      changeBucket(currentBucket); 
       
       // Search Listener
       document.getElementById('searchInput').addEventListener('input', (e) => filterAndRender(e.target.value));
@@ -286,18 +341,37 @@
     function changeBucket(bucketName) {
       currentBucket = bucketName;
       document.getElementById('currentBucketLabel').innerText = bucketName;
-      renderBucketButtons(); // Re-render to update active class
+      renderBucketButtons(); 
+      
+      // --- LOGIC KIỂM TRA QUYỀN UPLOAD ---
+      const uploadCard = document.getElementById('uploadCard');
+      const readOnlyMsg = document.getElementById('readOnlyMessage');
+
+      if (readOnlyBuckets.includes(bucketName)) {
+        uploadCard.style.display = 'none';
+        readOnlyMsg.style.display = 'block';
+      } else {
+        uploadCard.style.display = 'block';
+        readOnlyMsg.style.display = 'none';
+      }
+      
       loadBucket(bucketName);
     }
 
-    // 2. LOAD DATA (ANTI-LAG)
+    // 2. LOAD DATA
     function loadBucket(bucketName) {
       const grid = document.getElementById('galleryGrid');
-      const loader = document.getElementById('loader');
+      // const loader = document.getElementById('loader'); // Loader cũ dưới đáy
+      const loadingOverlay = document.getElementById('loadingOverlay'); // Loader mới toàn màn hình
+
       grid.innerHTML = "";
-      loader.style.display = 'block';
+      // Hiển thị Loading toàn màn hình
+      loadingOverlay.style.display = 'flex';
 
       s3.listObjectsV2({ Bucket: bucketName }, (err, data) => {
+        // Tắt Loading toàn màn hình khi tải xong (hoặc lỗi)
+        loadingOverlay.style.display = 'none';
+
         if (err) { alert("Lỗi tải bucket: " + err.message); return; }
         
         allFiles = (data.Contents || []).map(obj => ({
@@ -310,7 +384,6 @@
         })).sort((a, b) => b.timestamp - a.timestamp);
 
         filterAndRender();
-        loader.style.display = 'none';
       });
     }
 
@@ -320,7 +393,6 @@
 
       filteredFiles = allFiles.filter(item => {
         const matchTab = item.type === currentTab;
-        // Search by Date (YYYY-MM-DD) or Filename
         const matchSearch = item.isoDate.includes(searchText) || item.dateStr.includes(searchText) || item.key.toLowerCase().includes(searchText.toLowerCase());
         return matchTab && matchSearch;
       });
@@ -421,21 +493,11 @@
       progressWrapper.style.display = 'block'; // Show progress
 
       let uploadedCount = 0;
-      let totalSize = 0;
-      let loadedSize = 0;
-
-      // Calculate total size
-      for(let i=0; i<files.length; i++) totalSize += files[i].size;
 
       // Upload Loop
       Array.from(files).forEach(file => {
         const params = { Bucket: currentBucket, Key: file.name, Body: file, ACL: "public-read" };
         const upload = s3.upload(params);
-
-        upload.on('httpUploadProgress', (evt) => {
-          // Note: This logic is simplified for multiple files progress estimation
-          // Ideally track per file, but simple accumulation works for visual feedback
-        });
 
         upload.send((err) => {
           uploadedCount++;
@@ -486,7 +548,6 @@
         : `<video src="${item.url}" controls autoplay></video>`;
     }
     
-    // Keyboard support
     document.addEventListener("keydown", e => {
        if (document.getElementById("lightbox").style.display === "flex") {
          if (e.key === "ArrowLeft") changeSlide(-1);
